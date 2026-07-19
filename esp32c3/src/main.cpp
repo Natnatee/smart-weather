@@ -3,6 +3,9 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 
+// เลือกโหมดการทดสอบ (1 = ใช้ข้อมูลจำลองสำหรับพัฒนาต่อ, 0 = อ่านจากเซนเซอร์จริง)
+#define USE_MOCK_DATA 0
+
 // กำหนดพินของเซนเซอร์ DHT22 (ย้ายมาที่ GPIO 5 แล้ว)
 #define DHT_PIN 5
 
@@ -13,8 +16,16 @@
 // สร้างอ็อบเจกต์หน้าจอ OLED SSD1306 (128x64) I2C แบบ Hardware
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ OLED_SCL, /* data=*/ OLED_SDA);
 
-// สร้างอ็อบเจกต์ SimpleDHT22
-SimpleDHT22 dht22(DHT_PIN);
+// คลาส Wrapper ปรับปรุงพิเศษสำหรับ ESP32 เพื่อแก้ปัญหา Watchdog Reset
+class SafeSimpleDHT11 : public SimpleDHT11 {
+public:
+    SafeSimpleDHT11(int pin) : SimpleDHT11(pin) {
+        levelTimeout = 5000; // ลด Timeout จาก 500ms เหลือ 5ms (5,000 us) ป้องกันการค้างนานจนโดน Watchdog Reset
+    }
+};
+
+// สร้างอ็อบเจกต์ SafeSimpleDHT11
+SafeSimpleDHT11 dht11(DHT_PIN);
 
 // ตัวแปรสำหรับจัดเวลาการทำงานแบบ Non-blocking
 unsigned long last_read_ms = 0;
@@ -54,7 +65,11 @@ void setup() {
     
     Serial.println("=========================================");
     Serial.println("Smart Weather Station - ESP32-C3 Initialized");
-    Serial.println("Reading temperature and humidity from DHT22...");
+    if (USE_MOCK_DATA) {
+        Serial.println("Running in MOCK DATA mode for simulation!");
+    } else {
+        Serial.println("Reading temperature and humidity from DHT11...");
+    }
     Serial.println("=========================================");
 
     // เริ่มต้นหน้าจอ OLED
@@ -63,7 +78,7 @@ void setup() {
     draw_status_on_oled("OLED OK. Initializing...");
     Serial.println("[DEBUG] OLED Display initialized.");
 
-    // ตั้งพินแบบ Input Pull-up เพื่อความเสถียรของ DHT22 (เผื่อเคสไม่มีตัวต้านทานภายนอก)
+    // ตั้งพินแบบ Input Pull-up เพื่อความเสถียร
     pinMode(DHT_PIN, INPUT_PULLUP);
     
     draw_status_on_oled("System Running...");
@@ -76,20 +91,40 @@ void loop() {
     if (now_ms - last_read_ms >= READ_INTERVAL_MS) {
         last_read_ms = now_ms;
 
-        Serial.println("[DEBUG] Requesting data from DHT22...");
-        
         float temperature = 0;
         float humidity = 0;
+
+#if USE_MOCK_DATA
+        // จำลองข้อมูลอุณหภูมิและความชื้นสัมพัทธ์ (สุ่มเพิ่มลดช้าๆ)
+        static float mock_temp = 28.5;
+        static float mock_humid = 65.0;
+        
+        // สุ่มเพิ่มลดทีละนิด (-0.2 ถึง +0.2)
+        mock_temp += ((random(0, 100) - 50) / 250.0);
+        mock_humid += ((random(0, 100) - 50) / 100.0);
+        
+        // ควบคุมไม่ให้ค่าหลุดขอบเขตที่เหมาะสม
+        if (mock_temp < 20.0) mock_temp = 20.0;
+        if (mock_temp > 40.0) mock_temp = 40.0;
+        if (mock_humid < 40.0) mock_humid = 40.0;
+        if (mock_humid > 95.0) mock_humid = 95.0;
+        
+        temperature = mock_temp;
+        humidity = mock_humid;
+
+        Serial.println("[DEBUG] Generating Mock Data...");
+#else
+        Serial.println("[DEBUG] Requesting data from DHT11...");
         int err = SimpleDHTErrSuccess;
         
-        // อ่านค่าจาก DHT22 ด้วย SimpleDHT
-        if ((err = dht22.read2(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
-            Serial.printf("[ERROR] Read DHT22 failed, err code = %d\n", err);
+        // อ่านค่าจาก DHT11 ด้วย SimpleDHT ที่ปรับจูน Timeout แล้ว
+        if ((err = dht11.read2(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
+            Serial.printf("[ERROR] Read DHT11 failed, err code = %d\n", err);
             draw_status_on_oled("Sensor Read Error!");
             return;
         }
-
-        Serial.println("[DEBUG] Data received from DHT22.");
+        Serial.println("[DEBUG] Data received from DHT11.");
+#endif
 
         // ปริ้นผลลัพธ์ออก Serial Monitor
         Serial.printf("[INFO] Temp: %.2f *C | Humid: %.2f %%\n", temperature, humidity);

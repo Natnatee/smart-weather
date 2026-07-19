@@ -37,6 +37,9 @@
 ### การต่อวงจร (Wiring Reference)
 | Device | Pin | ESP32-C3 Pin | Function | Notes |
 |---|---|---|---|---|
+| **Rain Sensor** | VCC | **3V3** | Power Supply | แรงดันไฟเลี้ยง 3.3V |
+| | GND | **GND** | Ground | กราวด์ร่วม |
+| | DO | **GPIO 4** | Digital Output | สัญญาณดิจิทัล (Active LOW เมื่อตรวจจับหยดน้ำ) |
 | **DHT22** | VCC | **3V3** | Power Supply | แรงดันไฟเลี้ยง 3.3V |
 | | GND | **GND** | Ground | กราวด์ร่วม |
 | | DATA | **GPIO 5** | Digital I/O | ต่อตัวต้านทาน 4.7kΩ - 10kΩ ดึงสัญญาณขึ้นไปยัง 3.3V |
@@ -44,6 +47,7 @@
 | | GND | **GND** | Ground | กราวด์ร่วม |
 | | SDA | **GPIO 20** | I2C Data | พอร์ต Hardware I2C SDA |
 | | SCL | **GPIO 21** | I2C Clock | พอร์ต Hardware I2C SCL |
+
 
 ## Firmware Status
 - **สถานะ:** Prototype (WIP) - ขณะนี้กำลังอยู่ในเฟสทดสอบการอ่านค่าเซนเซอร์และเขียน Log ออก Serial Monitor

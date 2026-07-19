@@ -11,16 +11,19 @@
 
 ## Hardware
 1. **Microcontroller:** ESP32-C3 (บอร์ด Super Mini สถาปัตยกรรม RISC-V)
-2. **Sensor:** DHT22 (วัดอุณหภูมิช่วง -40 ถึง 80 °C ความคลาดเคลื่อน ±0.5 °C, ความชื้นช่วง 0-100% ความคลาดเคลื่อน ±2%)
-3. **Display:** จอ OLED 0.96" (Monochrome, I2C interface, ไดรเวอร์ SSD1306/SH1106)
+2. **Sensor 1:** DHT22 (วัดอุณหภูมิและความชื้นสัมพัทธ์)
+3. **Sensor 2:** Rain Sensor (โมดูลตรวจจับหยดน้ำ อ่านเฉพาะสัญญาณ Digital Output DO)
+4. **Display:** จอ OLED 0.96" (Monochrome, I2C interface, ไดรเวอร์ SSD1306/SH1106)
 
 ## Pin Map
 
 | Function | Pin | Device | Direction | Notes |
 |---|---|---|---|---|
-| DHT22 Data | **GPIO 5** | DHT22 | Input / Pull-up | ขา Digital I/O (ADC2) ย้ายจาก GPIO 4 เพื่อหลีกเลี่ยงปัญหาการอ่านค่าล้มเหลว |
+| Rain Sensor DO | **GPIO 4** | Rain Sensor | Input / Pull-up | ขา Digital Output (Active LOW เมื่อเปียกน้ำ) |
+| DHT22 Data | **GPIO 5** | DHT22 | Input / Pull-up | ขา Digital I/O สำหรับวัดอุณหภูมิและความชื้น |
 | OLED SDA | **GPIO 20** | OLED 0.96" | I/O (Open Drain) | ขา Hardware I2C SDA มาตรฐานของ ESP32-C3 |
 | OLED SCL | **GPIO 21** | OLED 0.96" | Output / Open Drain | ขา Hardware I2C SCL มาตรฐานของ ESP32-C3 |
+
 
 ## Electrical / Safety Notes
 - เซนเซอร์ DHT22 และจอ OLED 0.96" ใช้แรงดันไฟเลี้ยง 3.3V จากบอร์ด ESP32-C3
@@ -29,7 +32,16 @@
 ## Firmware Architecture
 - พัฒนาบนเฟรมเวิร์ก Arduino ด้วย PlatformIO (บอร์ดคอนฟิกเป็น `lolin_c3_mini`)
 - การทำงานแบบ Non-blocking โดยใช้ `millis()` ในการจัดตารางเวลาอ่านเซนเซอร์และอัปเดตข้อมูลบนหน้าจอ OLED
-- โครงสร้างโปรแกรมเริ่มต้นอยู่ใน `esp32c3/src/main.cpp`
+- โครงสร้างโปรแกรมแยกเป็นโมดูลชัดเจน:
+  - [config.h](file:///c:/PROJECT/smart-weather/esp32c3/include/config.h) : ค่าคอนฟิก พิน Wi-Fi Credentials และสเกลเวลา
+  - [oled_display.h](file:///c:/PROJECT/smart-weather/esp32c3/include/oled_display.h) / [oled_display.cpp](file:///c:/PROJECT/smart-weather/esp32c3/src/oled_display.cpp) : โมดูลจัดการหน้าจอ OLED
+  - [dht_sensor.h](file:///c:/PROJECT/smart-weather/esp32c3/include/dht_sensor.h) / [dht_sensor.cpp](file:///c:/PROJECT/smart-weather/esp32c3/src/dht_sensor.cpp) : โมดูลอ่านค่าเซนเซอร์ DHT11/DHT22
+  - [rain_sensor.h](file:///c:/PROJECT/smart-weather/esp32c3/include/rain_sensor.h) / [rain_sensor.cpp](file:///c:/PROJECT/smart-weather/esp32c3/src/rain_sensor.cpp) : โมดูลอ่านค่า Rain Sensor (Digital Output)
+  - [storage.h](file:///c:/PROJECT/smart-weather/esp32c3/include/storage.h) / [storage.cpp](file:///c:/PROJECT/smart-weather/esp32c3/src/storage.cpp) : โมดูลจัดเก็บข้อมูลใน RAM ล่วงหน้า (Static RAM FIFO Buffer)
+  - [wifi_manager.h](file:///c:/PROJECT/smart-weather/esp32c3/include/wifi_manager.h) / [wifi_manager.cpp](file:///c:/PROJECT/smart-weather/esp32c3/src/wifi_manager.cpp) : โมดูลจัดการเชื่อมต่อ Wi-Fi, NTP Time Sync และยิง HTTP POST Batch ไปยัง Next.js Server
+  - [main.cpp](file:///c:/PROJECT/smart-weather/esp32c3/src/main.cpp) : Entry point หลัก (สั้น กระชับ ควบคุมการทำงานแบบ Non-blocking)
+
+
 
 ## Libraries
 - **SimpleDHT (winlinvip):** ไลบรารีสแกนพัลส์แบบมีระบบ Safety Timeout ป้องกัน Watchdog crash ได้ดีกว่าเมื่อไม่มีเซนเซอร์ต่ออยู่

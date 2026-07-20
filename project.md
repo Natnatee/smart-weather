@@ -66,7 +66,10 @@ pio run -t upload -t monitor
 ## Current State
 - [x] ออกแบบ Pin Map
 - [x] สร้างไฟล์ `rule.md` และ `project.md`
-- [/] สร้างไฟล์โครงสร้างและโปรแกรมสำหรับอ่านค่าจาก DHT22 และแสดงผลผ่าน Serial Monitor
+- [x] สร้างไฟล์โครงสร้างและโปรแกรมสำหรับอ่านค่าจาก DHT22 และแสดงผลผ่าน Serial Monitor
+- [x] ตั้งค่า Next.js Web App & API Endpoint (`/api/weather`)
+- [x] ตั้งค่า Drizzle ORM + Neon PostgreSQL Database Schema (`weather_logs`)
+- [x] ตั้งค่า Favicon/Icon และชื่อเว็บเป็น smart-weather เรียบร้อยแล้ว
 
 ## Open Questions
 - ไม่มี (รอทดสอบเฟสแรกอ่านค่าเซนเซอร์)

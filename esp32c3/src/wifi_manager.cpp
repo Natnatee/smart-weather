@@ -13,36 +13,15 @@ void init_wifi() {
 }
 
 bool connect_wifi() {
-    Serial.println("[WIFI] Scanning nearby 2.4GHz Wi-Fi networks...");
-    WiFi.persistent(false);
-    WiFi.mode(WIFI_STA);
-    WiFi.disconnect(true);
-    delay(200);
-
-    int num_nets = WiFi.scanNetworks();
-    Serial.printf("[WIFI] Scan finished. Found %d networks:\n", num_nets);
-    if (num_nets == 0) {
-        Serial.println("  -> [WARNING] No Wi-Fi networks found!");
-    } else {
-        for (int i = 0; i < num_nets; ++i) {
-            Serial.printf("  %2d: %-24s (RSSI: %d dBm) %s\n",
-                          i + 1,
-                          WiFi.SSID(i).c_str(),
-                          WiFi.RSSI(i),
-                          (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? "[Open]" : "[Encrypted]");
-            delay(10);
-        }
-    }
-    WiFi.scanDelete();
-
-    // สำคัญ: เคลียร์ State หลังการสแกน และปิด Modem Sleep ก่อนเริ่มเชื่อมต่อ
-    WiFi.disconnect(true);
-    delay(500);
+    Serial.printf("[WIFI] Connecting directly to SSID: '%s' ...\n", WIFI_SSID);
     
+    // ล้าง state เดิมและเปิดโหมด Station สดๆ ก่อนสั่งเชื่อมต่อ
+    WiFi.persistent(false);
+    WiFi.mode(WIFI_OFF);
+    delay(100);
     WiFi.mode(WIFI_STA);
-    WiFi.setSleep(false); // ปิด Power Save Mode เพื่อความเสถียรในการเชื่อมต่อ
+    WiFi.setSleep(false); // ปิด Mode Sleep เพื่อการรับส่งสัญญาณเต็มกำลัง
 
-    Serial.printf("[WIFI] Connecting to target SSID: '%s' ...\n", WIFI_SSID);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
     unsigned long start_time = millis();
@@ -52,15 +31,15 @@ bool connect_wifi() {
         
         int status = WiFi.status();
         if (status == WL_CONNECT_FAILED) {
-            Serial.println("\n[WIFI] Connection status: WL_CONNECT_FAILED (Check Password or WPA3 settings)");
+            Serial.println("\n[WIFI] Status: WL_CONNECT_FAILED (รหัสผ่านผิด หรือ WPA3 Security Mode ไม่ตรงกัน)");
             break;
         }
     }
     Serial.println();
 
     if (WiFi.status() == WL_CONNECTED) {
-        Serial.printf("[WIFI] Connected! IP Address: %s (RSSI: %d dBm)\n", 
-                      WiFi.localIP().toString().c_str(), WiFi.RSSI());
+        Serial.printf("[WIFI] Connected Successfully! IP Address: %s (Channel: %d, RSSI: %d dBm)\n", 
+                      WiFi.localIP().toString().c_str(), WiFi.channel(), WiFi.RSSI());
         
         if (!ntp_synced) {
             sync_time_ntp();

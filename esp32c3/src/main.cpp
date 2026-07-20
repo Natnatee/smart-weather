@@ -113,16 +113,16 @@ void loop() {
         }
     }
 
-    // 5. เชื่อมต่อ Wi-Fi และส่งข้อมูลทุกๆ UPLOAD_INTERVAL_MS (10 นาที)
+    // 5. เชื่อมต่อ Wi-Fi และส่งข้อมูลทุกๆ UPLOAD_INTERVAL_MS
     if (now_ms - last_upload_ms >= UPLOAD_INTERVAL_MS) {
         last_upload_ms = now_ms;
-        Serial.println("[TIMER] 10-Minute Upload Interval Reached.");
+        Serial.printf("[TIMER] %lu-Second Upload Interval Reached.\n", UPLOAD_INTERVAL_MS / 1000);
         
         if (connect_wifi()) {
             send_stored_records_to_server();
             disconnect_wifi();
         } else {
-            Serial.println("[TIMER] Wi-Fi connection failed. Will retry in next 10-minute cycle.");
+            Serial.println("[TIMER] Wi-Fi connection failed. Will retry in next cycle.");
         }
     }
 }

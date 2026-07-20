@@ -21,7 +21,7 @@
 // ตัวแปรจัดเวลาการทำงานแบบ Non-blocking
 constexpr unsigned long READ_INTERVAL_MS = 2000;          // อ่านค่า DHT & Rain ทุกๆ 2 วินาที
 constexpr unsigned long STORAGE_INTERVAL_MS = 10000;       // เก็บบันทึกลง RAM ทุกๆ 10 วินาที
-constexpr unsigned long UPLOAD_INTERVAL_MS = 30000;        // ต่อ Wi-Fi ส่งข้อมูลทุกๆ 30 วินาที (30,000 ms)
+constexpr unsigned long UPLOAD_INTERVAL_MS = 300000;        // ต่อ Wi-Fi ส่งข้อมูลทุกๆ 30 วินาที (30,000 ms)
 constexpr unsigned long WIFI_CONNECT_TIMEOUT_MS = 30000;   // Timeout ต่อ Wi-Fi 30 วินาที
 
 // จำนวนชุดข้อมูลสูงสุดที่เก็บใน RAM FIFO Buffer (8,640 ชุด = 24 ชั่วโมง)

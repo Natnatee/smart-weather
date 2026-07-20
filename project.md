@@ -70,6 +70,7 @@ pio run -t upload -t monitor
 - [x] ตั้งค่า Next.js Web App & API Endpoint (`/api/weather`)
 - [x] ตั้งค่า Drizzle ORM + Neon PostgreSQL Database Schema (`weather_logs`)
 - [x] ตั้งค่า Favicon/Icon และชื่อเว็บเป็น smart-weather เรียบร้อยแล้ว
+- [x] ออกแบบ Mobile-First Dashboard (สลับแท็บภาพรวม, กราฟแนวโน้ม SVG, และสถิติ Max/Min/Avg)
 
 ## Open Questions
 - ไม่มี (รอทดสอบเฟสแรกอ่านค่าเซนเซอร์)

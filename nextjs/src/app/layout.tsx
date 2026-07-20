@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   title: "smart-weather",
   description: "ระบบตรวจวัดสภาพอากาศ Smart Weather Station",
   icons: {
-    icon: "/ChatGPT Image Jul 20, 2026, 07_50_34 AM.png",
-    shortcut: "/ChatGPT Image Jul 20, 2026, 07_50_34 AM.png",
-    apple: "/ChatGPT Image Jul 20, 2026, 07_50_34 AM.png",
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
   },
 };
 
@@ -30,9 +30,9 @@ export default function RootLayout({
   return (
     <html
       lang="th"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full bg-slate-950 text-slate-100 antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-slate-950 text-slate-100">{children}</body>
     </html>
   );
 }

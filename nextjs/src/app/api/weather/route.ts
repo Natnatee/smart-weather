@@ -3,13 +3,13 @@ import { db } from "@/db";
 import { weatherLogs } from "@/db/schema";
 import { desc } from "drizzle-orm";
 
-// GET /api/weather - ดึงข้อมูลสภาพอากาศล่าสุด 50 รายการ
+// GET /api/weather - ดึงข้อมูลสภาพอากาศล่าสุด 50 รายการ (เรียงตาม ID ล่าสุดลงมา)
 export async function GET() {
   try {
     const logs = await db
       .select()
       .from(weatherLogs)
-      .orderBy(desc(weatherLogs.createdAt))
+      .orderBy(desc(weatherLogs.id))
       .limit(50);
 
     return NextResponse.json({ success: true, data: logs });

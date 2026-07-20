@@ -2,6 +2,7 @@
 #include "config.h"
 #include "storage.h"
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <time.h>
 
@@ -136,20 +137,40 @@ bool send_stored_records_to_server() {
         payload += "]}";
 
         HTTPClient http;
-        http.begin(API_SERVER_URL);
-        http.addHeader("Content-Type", "application/json");
+        if (String(API_SERVER_URL).startsWith("https")) {
+            WiFiClientSecure client;
+            client.setInsecure();
+            http.begin(client, API_SERVER_URL);
+            http.addHeader("Content-Type", "application/json");
 
-        Serial.printf("[HTTP] Sending batch payload (%d bytes, %d records)...\n", payload.length(), records_to_send);
-        int http_code = http.POST(payload);
+            Serial.printf("[HTTP] Sending batch payload via HTTPS (%d bytes, %d records)...\n", payload.length(), records_to_send);
+            int http_code = http.POST(payload);
 
-        if (http_code == 200 || http_code == 201) {
-            Serial.printf("[HTTP] POST Success! Response Code: %d\n", http_code);
-            clear_storage_up_to(records_to_send);
-            http.end();
+            if (http_code == 200 || http_code == 201) {
+                Serial.printf("[HTTP] POST Success! Response Code: %d\n", http_code);
+                clear_storage_up_to(records_to_send);
+                http.end();
+            } else {
+                Serial.printf("[HTTP] POST Failed! Response Code: %d (%s)\n", http_code, http.errorToString(http_code).c_str());
+                http.end();
+                return false;
+            }
         } else {
-            Serial.printf("[HTTP] POST Failed! Response Code: %d (%s)\n", http_code, http.errorToString(http_code).c_str());
-            http.end();
-            return false; // หากล้มเหลว หยุดลูปและเก็บข้อมูลใน RAM ไว้ส่งรอบถัดไป
+            http.begin(API_SERVER_URL);
+            http.addHeader("Content-Type", "application/json");
+
+            Serial.printf("[HTTP] Sending batch payload via HTTP (%d bytes, %d records)...\n", payload.length(), records_to_send);
+            int http_code = http.POST(payload);
+
+            if (http_code == 200 || http_code == 201) {
+                Serial.printf("[HTTP] POST Success! Response Code: %d\n", http_code);
+                clear_storage_up_to(records_to_send);
+                http.end();
+            } else {
+                Serial.printf("[HTTP] POST Failed! Response Code: %d (%s)\n", http_code, http.errorToString(http_code).c_str());
+                http.end();
+                return false;
+            }
         }
     }
 

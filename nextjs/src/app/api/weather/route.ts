@@ -27,13 +27,20 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // รองรับทั้งแบบ Single Object และ Array (Batch)
-    const items = Array.isArray(body) ? body : [body];
+    // รองรับทั้งแบบ Single Object, Array, และ Object ที่มีฟิลด์ records: [...]
+    let items: any[] = [];
+    if (Array.isArray(body)) {
+      items = body;
+    } else if (body && Array.isArray(body.records)) {
+      items = body.records;
+    } else {
+      items = [body];
+    }
 
     const recordsToInsert = items.map((item: any) => ({
-      temperature: Number(item.temperature),
-      humidity: Number(item.humidity),
-      rainDetected: Boolean(item.rain_detected ?? item.rainDetected ?? false),
+      temperature: Number(item.temperature ?? item.temp ?? 0),
+      humidity: Number(item.humidity ?? item.humid ?? 0),
+      rainDetected: Boolean(item.rain_detected ?? item.rainDetected ?? item.rain ?? false),
     }));
 
     // บันทึกลงฐานข้อมูล Neon ผ่าน Drizzle ORM

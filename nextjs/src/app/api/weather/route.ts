@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { weatherLogs } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { desc, gte } from "drizzle-orm";
 
-// GET /api/weather - ดึงข้อมูลสภาพอากาศล่าสุด 50 รายการ (เรียงตาม ID ล่าสุดลงมา)
+// GET /api/weather - ดึงข้อมูลสภาพอากาศตั้งแต่วันนี้ 00:00 น. (หรือย้อนหลัง 50 รายการกรณีเพิ่งขึ้นวันใหม่)
 export async function GET() {
   try {
-    const logs = await db
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    let logs = await db
       .select()
       .from(weatherLogs)
-      .orderBy(desc(weatherLogs.id))
-      .limit(50);
+      .where(gte(weatherLogs.createdAt, startOfToday))
+      .orderBy(desc(weatherLogs.id));
+
+    // หากวันนี้ยังไม่มีข้อมูล (เช่น เพิ่งเปลี่ยนวัน) ให้ fallback ดึง 50 รายการล่าสุด
+    if (logs.length === 0) {
+      logs = await db
+        .select()
+        .from(weatherLogs)
+        .orderBy(desc(weatherLogs.id))
+        .limit(50);
+    }
 
     return NextResponse.json({ success: true, data: logs });
   } catch (error: any) {
